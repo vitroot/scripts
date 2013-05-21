@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# install
+rpm -Uvh http://pptpclient.sourceforge.net/yum/stable/rhel5/pptp-release-current.noarch.rpm &>/dev/null
+if [ `rpm -qa | grep pptpd | wc -l` -lt 1 ]; then yum -y install pptpd; fi
+
+# editing
+if [ `cat /etc/pptpd.conf | grep "192.168.101." | wc -l` -lt 1 ]
+    then printf "localip 192.168.101.1\nremoteip 192.168.101.234-236" >> /etc/pptpd.conf
+fi
+if [ `cat /etc/ppp/options.pptpd | grep "8.8.8.8" | wc -l` -lt 1 ]
+    then printf "ms-dns 8.8.8.8" >> /etc/ppp/options.pptpd
+fi
+sed -i 's/^IPTABLES_MODULES=(.*)/IPTABLES_MODULES="ip_conntrack_netbios_ns ip_nat_pptp ip_gre ip_conntrack_pptp"/' /etc/sysconfig/iptables-config
+
+# create pptp-user
+PPASS=`tr -dc A-Za-z0-9_ < /dev/urandom | head -c 8 | xargs`
+DIGIT=`cat /etc/ppp/chap-secrets | grep pptp | awk '{print $1}' | awk -F"pptp" '{print $2}' | tail -n1`
+DIGIT2=$(( $DIGIT + 1 ))
+PUSER="pptp$DIGIT2"
+vpnuser add $PUSER $PPASS
+
+# iptables
+if [ `cat /etc/sysconfig/iptables | grep "INPUT -p gre -j ACCEPT" | wc -l` -lt 1 ]
+                            then echo "-A INPUT -p gre -j ACCEPT" >> /etc/sysconfig/iptables
+fi
+if [ `cat /etc/sysconfig/iptables | grep "INPUT -p tcp --dport 1723 -j ACCEPT" | wc -l` -lt 1 ]
+                            then echo "-A INPUT -p tcp --dport 1723 -j ACCEPT" >> /etc/sysconfig/iptables
+fi
+if [ `cat /etc/sysconfig/iptables | grep "INPUT -p 47 -j ACCEPT" | wc -l` -lt 1 ]
+                            then echo "-A INPUT -p 47 -j ACCEPT" >> /etc/sysconfig/iptables
+fi
+if [ `cat /etc/sysconfig/iptables | grep "POSTROUTING -s 192.168.101.0/255.255.255.0 -o eth0 -j MASQUERADE" | wc -l` -lt 1 ]
+                            then echo "-A POSTROUTING -s 192.168.101.0/255.255.255.0 -o eth0 -j MASQUERADE" >> /etc/sysconfig/iptables
+fi
+
+# service
+/etc/init.d/iptables restart
+killall -9 pptpd 2>/dev/null
+/etc/init.d/pptpd stop
+/etc/init.d/pptpd start
+chkconfig --add pptpd
+
+# result
+printf "\n\n* Add user: $PUSER / $PPASS *\n\n"
+
