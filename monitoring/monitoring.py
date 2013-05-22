@@ -10,8 +10,8 @@ import os
 
 COMMASPACE = ', '
 
-RESPONSE_SAVE_PATH = "/var/www/xtipsru/data/www/mon.vitroot.ru/monitoring/"
-MAIL_LIST = ['vitroot.fl@gmail.com']
+RESPONSE_SAVE_PATH = "/tmp"
+MAIL_LIST = 'vitroot.fl@gmail.com'
 CONFIG_PATH = '/etc/monitoring.conf'
 LOG_FILE = '/var/log/monitoring.log'
 UNAME = os.uname()[1]
