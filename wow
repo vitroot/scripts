@@ -1,0 +1,46 @@
+#!/usr/bin/expect
+
+set timeout -1
+set hostname [lindex $argv 0]
+
+if { $hostname == "gw" } {
+    set password "ohFe1ChoFuxe"
+    set rpassword "AaRaer1aibah8Oi4"
+    set host "88.198.230.89"
+    set port "37896"
+}
+
+if { $hostname == "x5" } {
+    set password "Som7Iengeidu"
+    set rpassword "ua4quieTheecheib"
+    set host "88.198.230.68"
+    set port "36978"
+}
+
+if { $hostname == "x100" } {
+    set password "Uli1ahph9Wuu"
+    set rpassword "theev7wiiL3IFaht"
+    set host "88.198.230.66"
+    set port "32879"
+}
+
+if { $hostname == "fun" } {
+    set password "So9naib3phae"
+    set rpassword "MoiY1Ohv5rah8oe0"
+    set host "88.198.230.67"
+    set port "39532"
+}
+
+spawn ssh sshuser@$host -p $port
+expect "*?assword:*" {
+    send -- "$password\n"
+    send -- "\n"
+    expect "$*" {
+        send -- "su\n"
+        expect "*?assword:*" {
+            send -- "$rpassword\n"
+            send -- "cd /root/ && clear\n"
+        }
+    }
+    interact
+}
